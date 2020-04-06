@@ -14,6 +14,8 @@ ENV TERM linux
 # Airflow
 ARG AIRFLOW_VERSION=1.9.0
 ARG AIRFLOW_HOME=/usr/local/airflow
+ARG AIRFLOW_DEPS=""
+ARG PYTHON_DEPS=""
 
 # Define en_US.
 ENV LANGUAGE en_US.UTF-8
@@ -33,7 +35,6 @@ RUN set -ex \
         libblas-dev \
         liblapack-dev \
         libpq-dev \
-        git \
     ' \
     && apt-get update -yqq \
     && apt-get upgrade -yqq \
@@ -49,6 +50,7 @@ RUN set -ex \
         rsync \
         netcat \
         locales \
+        git \
     && sed -i 's/^# en_US.UTF-8 UTF-8$/en_US.UTF-8 UTF-8/g' /etc/locale.gen \
     && locale-gen \
     && update-locale LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8 \
@@ -59,8 +61,9 @@ RUN set -ex \
     && pip install pyOpenSSL \
     && pip install ndg-httpsclient \
     && pip install pyasn1 \
-    && pip install apache-airflow[crypto,celery,postgres,hive,jdbc,mysql]==$AIRFLOW_VERSION \
+    && pip install apache-airflow[crypto,celery,postgres,hive,jdbc,mysql${AIRFLOW_DEPS:+,}${AIRFLOW_DEPS}]==$AIRFLOW_VERSION \
     && pip install celery[redis]==4.1.1 \
+    && if [ -n "${PYTHON_DEPS}" ]; then pip install ${PYTHON_DEPS}; fi \
     && apt-get purge --auto-remove -yqq $buildDeps \
     && apt-get autoremove -yqq --purge \
     && apt-get clean \
